@@ -10,6 +10,7 @@ class User(AbstractBaseUser):
     email = models.CharField(max_length=255, unique=True)
     bio = models.TextField(null=True, blank=True)
     image = models.ImageField(null=True, blank=True)
+    user_phone = models.CharField(max_length=255)
     auth_token = models.CharField(max_length=255, null=True, blank=True)
 
     USERNAME_FIELD = "user_name"

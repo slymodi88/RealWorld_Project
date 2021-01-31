@@ -1,9 +1,13 @@
+from django_redis import cache
 from rest_framework import generics
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.generics import ListAPIView
 
+from mixins.paginator import CustomPagination
 from realworld.api.serializers import ArticleSerializer, CommentSerializer, TagSerializer, \
     UserArticleFavoritesSerializer
 from realworld.models import Article, Comment, Tag, UserArticleFavorites
@@ -13,12 +17,15 @@ class ArticleApi(generics.ListCreateAPIView):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = CustomPagination
 
     def list(self, request, *args, **kwargs):
-        print(request.user)
-        queryset = Article.objects.all()
+        # paginator = self.pagination_class()
+        queryset =self.paginate_queryset(Article.objects.all())
+
         serializer = ArticleSerializer(queryset, many=True)
-        return Response({"result": serializer.data, "message": "Done", }, status=201)
+        # return Response({"result": serializer.data, "message": "Done", }, status=201)
+        return self.paginator.get_paginated_response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -41,6 +48,7 @@ class ArticleApiDetails(generics.RetrieveUpdateAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         article = get_object_or_404(Article, id=kwargs["pk"])
+
         serializer = ArticleSerializer(article)
         return Response({"result": serializer.data, "message": "Done", "status": True}, status=200)
 
@@ -167,3 +175,12 @@ class UserArticleFavoritesDetails(generics.RetrieveUpdateAPIView):
             raise PermissionDenied
         favorite_article.delete()
         return Response({"message": "Done", "status": True}, status=200)
+
+# class ApiArticleListView(ListAPIView):
+#     queryset = Article.objects.all()
+#     serializer_class = ArticleSerializer
+#     permission_classes = (IsAuthenticated,)
+#     pagination_class = CustomPagination
+
+
+
